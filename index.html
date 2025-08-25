@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Asistencia Escolar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f131b 0%, #27262a 100%);
+            min-height: 100vh;
+            color: #b8bcc3;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(56, 59, 66, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            color: #b8bcc3;
+            font-size: 28px;
+            margin-bottom: 0;
+        }
+
+        .floating-add-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(76, 175, 80, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-add-btn:hover {
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 0 6px 25px rgba(76, 175, 80, 0.5);
+        }
+
+        .floating-date-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(56, 59, 66, 0.9);
+            border-radius: 50%;
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-date-btn:hover {
+            transform: translateY(-2px) scale(1.1);
+            background: rgba(76, 175, 80, 0.1);
+            box-shadow: 0 6px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .students-container {
+            background: rgba(56, 59, 66, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .student-row {
+            display: flex;
+            align-items: center;
+            background: rgba(39, 38, 42, 0.8);
+            margin-bottom: 15px;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(184, 188, 195, 0.1);
+        }
+
+        .student-row:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: rgba(39, 38, 42, 0.9);
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            min-width: 250px;
+            margin-right: 20px;
+        }
+
+        .student-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #383b42, #27262a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b8bcc3;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(184, 188, 195, 0.2);
+        }
+
+        .student-details h3 {
+            font-size: 16px;
+            color: #b8bcc3;
+            margin-bottom: 2px;
+        }
+
+        .student-details p {
+            font-size: 12px;
+            color: rgba(184, 188, 195, 0.7);
+        }
+
+        .attendance-scroll {
+            flex: 1;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .attendance-grid {
+            display: flex;
+            gap: 8px;
+            padding-bottom: 10px;
+        }
+
+        .day-cell {
+            min-width: 70px;
+            background: rgba(15, 19, 27, 0.8);
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid rgba(184, 188, 195, 0.1);
+        }
+
+        .day-cell:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            background: rgba(15, 19, 27, 0.9);
+        }
+
+        .day-header {
+            font-size: 10px;
+            color: rgba(184, 188, 195, 0.8);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .day-number {
+            font-size: 16px;
+            font-weight: bold;
+            color: #b8bcc3;
+            margin-bottom: 2px;
+        }
+
+        .day-name {
+            font-size: 8px;
+            color: rgba(184, 188, 195, 0.6);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .attendance-status {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .status-present { background: #48bb78; }
+        .status-absent { background: #f56565; }
+        .status-excuse { background: #ed8936; }
+        .status-pending { background: #383b42; color: #b8bcc3; }
+
+        .comment-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background: #4299e1;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 10px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .day-cell:hover .comment-btn {
+            display: block;
+        }
+
+        .day-cell.has-comment .comment-btn {
+            display: block;
+            background: #f6ad55;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #27262a;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(184, 188, 195, 0.1);
+        }
+
+        .modal h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #b8bcc3;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #b8bcc3;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #383b42;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            background: #0f131b;
+            color: #b8bcc3;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(184, 188, 195, 0.5);
+        }
+
+        .photo-upload {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .photo-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #383b42;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b8bcc3;
+            border: 2px solid rgba(184, 188, 195, 0.2);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #383b42;
+            color: #b8bcc3;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: rgba(184, 188, 195, 0.7);
+        }
+
+        .close:hover {
+            color: #b8bcc3;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 10px;
+            }
+            
+            .student-info {
+                min-width: 180px;
+                margin-right: 10px;
+            }
+            
+            .day-cell {
+                min-width: 60px;
+            }
+        }
+
+        /* Scrollbar Styles */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: rgba(184, 188, 195, 0.7);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #b8bcc3;
+        }
+
+        .date-range-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-inputs input {
+            flex: 1;
+        }
+
+        .date-inputs span {
+            color: #b8bcc3;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>📚 Gestión de Asistencia Escolar</h1>
+        </div>
+
+        <div class="students-container" id="studentsContainer">
+            <div class="empty-state">
+                <h3>No hay estudiantes registrados</h3>
+                <p>Comienza agregando tu primer estudiante</p>
+            </div>
+        </div>
+
+        <!-- Botones flotantes -->
+        <button class="floating-add-btn" onclick="openAddStudentModal()" title="Agregar Estudiante">
+            +
+        </button>
+        
+        <button class="floating-date-btn" onclick="openDateRangeModal()" title="Configurar Fechas">
+            📅
+        </button>
+    </div>
+
+    <!-- Modal para agregar estudiante -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddStudentModal()">&times;</span>
+            <h2>Agregar Nuevo Estudiante</h2>
+            <form id="addStudentForm">
+                <div class="form-group">
+                    <label for="firstName">Nombre</label>
+                    <input type="text" id="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Apellido</label>
+                    <input type="text" id="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="listNumber">Número de Lista</label>
+                    <input type="number" id="listNumber" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone">
+                </div>
+                <div class="form-group">
+                    <label for="photo">Foto</label>
+                    <div class="photo-upload">
+                        <div class="photo-preview" id="photoPreview">📷</div>
+                        <input type="file" id="photo" accept="image/*" onchange="previewPhoto(this)">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddStudentModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar Estudiante</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para configurar rango de fechas -->
+    <div id="dateRangeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDateRangeModal()">&times;</span>
+            <h2>Configurar Rango de Fechas</h2>
+            <form id="dateRangeForm">
+                <div class="date-range-form">
+                    <div class="form-group">
+                        <label>Rango de Fechas de Clases</label>
+                        <div class="date-inputs">
+                            <input type="date" id="startDate" required>
+                            <span>hasta</span>
+                            <input type="date" id="endDate" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeDateRangeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Fechas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para comentarios -->
+    <div id="commentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCommentModal()">&times;</span>
+            <h2>Agregar Comentario</h2>
+            <div class="form-group">
+                <label for="commentText">Comentario</label>
+                <textarea id="commentText" rows="4" placeholder="Escribe un comentario para este día..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeCommentModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="saveComment()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales - almacenamiento en memoria
+        let students = [];
+        let attendanceData = {};
+        let currentCommentStudent = null;
+        let currentCommentDate = null;
+        let dateRange = {
+            start: new Date(new Date().getFullYear(), 7, 20), // 20 de agosto por defecto
+            end: new Date(new Date().getFullYear(), 7, 27)    // 27 de agosto por defecto
+        };
+
+        // Generar días laborales según el rango configurado
+        function generateWorkingDays() {
+            const days = [];
+            const startDate = new Date(dateRange.start);
+            const endDate = new Date(dateRange.end);
+            
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dayOfWeek = d.getDay();
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Lunes a viernes
+                    days.push(new Date(d));
+                }
+            }
+            return days;
+        }
+
+        let workingDays = generateWorkingDays();
+
+        // Formatear fecha
+        function formatDate(date) {
+            const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+                           'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+            const dayNames = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+            
+            return {
+                month: months[date.getMonth()],
+                day: date.getDate(),
+                dayName: dayNames[date.getDay()],
+                fullDate: date.toISOString().split('T')[0]
+            };
+        }
+
+        // Renderizar estudiantes
+        function renderStudents() {
+            const container = document.getElementById('studentsContainer');
+            
+            if (students.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No hay estudiantes registrados</h3>
+                        <p>Comienza agregando tu primer estudiante</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = students.map(student => `
+                <div class="student-row">
+                    <div class="student-info">
+                        <div class="student-photo">
+                            ${student.photo ? `<img src="${student.photo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" alt="${student.firstName}">` : student.firstName.charAt(0)}
+                        </div>
+                        <div class="student-details">
+                            <h3>${student.firstName} ${student.lastName}</h3>
+                            <p>#${student.listNumber} | ${student.phone || 'Sin teléfono'}</p>
+                        </div>
+                    </div>
+                    <div class="attendance-scroll">
+                        <div class="attendance-grid">
+                            ${workingDays.map(date => {
+                                const dateInfo = formatDate(date);
+                                const attendanceKey = `${student.id}_${dateInfo.fullDate}`;
+                                const status = attendanceData[attendanceKey] || { status: 'pending' };
+                                
+                                return `
+                                    <div class="day-cell ${status.comment ? 'has-comment' : ''}" data-date="${dateInfo.fullDate}" onclick="toggleAttendance('${student.id}', '${dateInfo.fullDate}')">
+                                        <div class="day-header">${dateInfo.month}</div>
+                                        <div class="day-number">${dateInfo.day}</div>
+                                        <div class="day-name">${dateInfo.dayName}</div>
+                                        <div class="attendance-status status-${status.status}">
+                                            ${getStatusLabel(status.status)}
+                                        </div>
+                                        <button class="comment-btn" onclick="event.stopPropagation(); openCommentModal('${student.id}', '${dateInfo.fullDate}')">💬</button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Obtener etiqueta de estado
+        function getStatusLabel(status) {
+            switch (status) {
+                case 'present': return 'P';
+                case 'absent': return 'A';
+                case 'excuse': return 'E';
+                default: return '?';
+            }
+        }
+
+        // Alternar estado de asistencia (sin afectar el scroll)
+        function toggleAttendance(studentId, date) {
+            const attendanceKey = `${studentId}_${date}`;
+            const currentStatus = attendanceData[attendanceKey]?.status || 'pending';
+            
+            let newStatus;
+            switch (currentStatus) {
+                case 'pending':
+                    newStatus = 'present';
+                    break;
+                case 'present':
+                    newStatus = 'absent';
+                    break;
+                case 'absent':
+                    newStatus = 'excuse';
+                    break;
+                case 'excuse':
+                    newStatus = 'pending';
+                    break;
+                default:
+                    newStatus = 'present';
+            }
+            
+            if (!attendanceData[attendanceKey]) {
+                attendanceData[attendanceKey] = {};
+            }
+            attendanceData[attendanceKey].status = newStatus;
+            
+            saveAttendanceData();
+            
+            // Actualizar solo el elemento específico sin afectar el scroll
+            updateAttendanceCell(studentId, date, newStatus);
+        }
+
+        // Actualizar solo una celda específica de asistencia
+        function updateAttendanceCell(studentId, date, status) {
+            const studentIndex = students.findIndex(s => s.id === studentId);
+            if (studentIndex === -1) return;
+            
+            const studentRow = document.querySelectorAll('.student-row')[studentIndex];
+            if (!studentRow) return;
+            
+            const dayCells = studentRow.querySelectorAll('.day-cell');
+            const targetDateStr = date;
+            
+            dayCells.forEach(cell => {
+                const cellDate = cell.getAttribute('data-date');
+                if (cellDate === targetDateStr) {
+                    const statusElement = cell.querySelector('.attendance-status');
+                    if (statusElement) {
+                        // Remover clases de estado anteriores
+                        statusElement.classList.remove('status-present', 'status-absent', 'status-excuse', 'status-pending');
+                        // Agregar nueva clase de estado
+                        statusElement.classList.add(`status-${status}`);
+                        // Actualizar el texto
+                        statusElement.textContent = getStatusLabel(status);
+                    }
+                }
+            });
+        }
+
+        // Abrir modal de agregar estudiante
+        function openAddStudentModal() {
+            document.getElementById('addStudentModal').style.display = 'block';
+        }
+
+        // Cerrar modal de agregar estudiante
+        function closeAddStudentModal() {
+            document.getElementById('addStudentModal').style.display = 'none';
+            document.getElementById('addStudentForm').reset();
+            document.getElementById('photoPreview').innerHTML = '📷';
+        }
+
+        // Vista previa de foto
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('photoPreview').innerHTML = 
+                        `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" alt="Preview">`;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Agregar estudiante
+        document.getElementById('addStudentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const listNumber = document.getElementById('listNumber').value;
+            const phone = document.getElementById('phone').value;
+            const photoFile = document.getElementById('photo').files[0];
+            
+            // Verificar si el número de lista ya existe
+            if (students.some(s => s.listNumber === listNumber)) {
+                alert('Ya existe un estudiante con ese número de lista');
+                return;
+            }
+            
+            const student = {
+                id: Date.now().toString(),
+                firstName,
+                lastName,
+                listNumber,
+                phone,
+                photo: null
+            };
+            
+            if (photoFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    student.photo = e.target.result;
+                    students.push(student);
+                    saveStudentData();
+                    renderStudents();
+                    closeAddStudentModal();
+                };
+                reader.readAsDataURL(photoFile);
+            } else {
+                students.push(student);
+                saveStudentData();
+                renderStudents();
+                closeAddStudentModal();
+            }
+        });
+
+        // Abrir modal de comentario
+        function openCommentModal(studentId, date) {
+            currentCommentStudent = studentId;
+            currentCommentDate = date;
+            
+            const attendanceKey = `${studentId}_${date}`;
+            const currentComment = attendanceData[attendanceKey]?.comment || '';
+            
+            document.getElementById('commentText').value = currentComment;
+            document.getElementById('commentModal').style.display = 'block';
+        }
+
+        // Abrir modal de configuración de fechas
+        function openDateRangeModal() {
+            // Establecer valores actuales en el formulario
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            
+            startInput.value = dateRange.start.toISOString().split('T')[0];
+            endInput.value = dateRange.end.toISOString().split('T')[0];
+            
+            document.getElementById('dateRangeModal').style.display = 'block';
+        }
+
+        // Cerrar modal de configuración de fechas
+        function closeDateRangeModal() {
+            document.getElementById('dateRangeModal').style.display = 'none';
+        }
+
+        // Cerrar modal de comentario
+        function closeCommentModal() {
+            document.getElementById('commentModal').style.display = 'none';
+            currentCommentStudent = null;
+            currentCommentDate = null;
+        }
+
+        // Guardar comentario
+        function saveComment() {
+            if (currentCommentStudent && currentCommentDate) {
+                const attendanceKey = `${currentCommentStudent}_${currentCommentDate}`;
+                const comment = document.getElementById('commentText').value;
+                
+                if (!attendanceData[attendanceKey]) {
+                    attendanceData[attendanceKey] = { status: 'pending' };
+                }
+                
+                attendanceData[attendanceKey].comment = comment;
+                saveAttendanceData();
+                renderStudents();
+                closeCommentModal();
+            }
+        }
+
+        // Configurar rango de fechas
+        document.getElementById('dateRangeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            
+            if (startDate > endDate) {
+                alert('La fecha de inicio debe ser anterior a la fecha de fin');
+                return;
+            }
+            
+            // Actualizar rango de fechas
+            dateRange.start = startDate;
+            dateRange.end = endDate;
+            
+            // Regenerar días laborales
+            workingDays = generateWorkingDays();
+            
+            // Re-renderizar estudiantes con nuevo rango
+            renderStudents();
+            
+            closeDateRangeModal();
+        });
+
+        // Guardar datos en memoria (simula persistencia durante la sesión)
+        function saveStudentData() {
+            // Los datos se mantienen en memoria durante la sesión
+            console.log('Datos de estudiantes guardados:', students.length, 'estudiantes');
+        }
+
+        function saveAttendanceData() {
+            // Los datos se mantienen en memoria durante la sesión
+            console.log('Datos de asistencia guardados');
+        }
+
+        // Cerrar modales al hacer clic fuera
+        window.onclick = function(event) {
+            const addModal = document.getElementById('addStudentModal');
+            const commentModal = document.getElementById('commentModal');
+            const dateRangeModal = document.getElementById('dateRangeModal');
+            
+            if (event.target === addModal) {
+                closeAddStudentModal();
+            }
+            if (event.target === commentModal) {
+                closeCommentModal();
+            }
+            if (event.target === dateRangeModal) {
+                closeDateRangeModal();
+            }
+        }
+
+        // Inicializar aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            renderStudents();
+        });
+    </script>
+</body>
+</html>
